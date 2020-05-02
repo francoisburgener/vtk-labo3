@@ -16,7 +16,6 @@ def coordinate_earth(lat,lng,alt):
     return transform.TransformPoint(0, 0, 0)
 
 
-
 def readInFile(filename):
     with open(filename, 'r', encoding="utf-8") as fd:
         dimensions = fd.readline().split(' ')
@@ -41,6 +40,8 @@ def main():
     delta_long = (LNG_2 - LNG_1) / Xs
     delta_lat = (LAT_2 - LAT_1) / Ys
 
+    minScalar = min(data)
+    maxScalar = max(data)
 
     # TODO comment detecter les lac ?
 
@@ -64,7 +65,7 @@ def main():
 
     # TODO modifier le lut pour afficher les bonnes couleurs : Ici c'est de la merde se que j'ai fait
     lut = vtk.vtkLookupTable()
-    lut.SetNumberOfColors(10)
+    lut.SetNumberOfColors(256)
     lut.SetTableRange(0, 4783)
     lut.SetHueRange(0.6, 0.0)
     lut.SetSaturationRange(0.5, 0.0)
@@ -82,7 +83,7 @@ def main():
     # Mapper
     gridMapper = vtk.vtkDataSetMapper()
     gridMapper.SetInputConnection(gridFilter.GetOutputPort())
-    gridMapper.SetScalarRange(1, 2400) # TODO quel range mettre ?
+    gridMapper.SetScalarRange(minScalar, maxScalar) # TODO quel range mettre ?
     gridMapper.SetLookupTable(lut)
 
     # Actor
@@ -92,7 +93,7 @@ def main():
     # Render
     renderer = vtk.vtkRenderer()
     renderer.AddActor(gridActor)
-    renderer.SetBackground(0, 0, 0)
+    renderer.SetBackground(0.5, 0.5, 0.5)
 
 
     renWin = vtk.vtkRenderWindow()
