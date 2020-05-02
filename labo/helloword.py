@@ -1,8 +1,6 @@
 import vtk as vtk
 
 # CONSTANT
-points = vtk.vtkPoints()
-sgrid = vtk.vtkStructuredGrid()
 LAT_1 = 45.0
 LAT_2 = 47.5
 LNG_1 = 5.0
@@ -34,7 +32,9 @@ def readInFile(filename):
         return data, int(dimensions[0]), int(dimensions[1])
 
 
-def initilizeData():
+def main():
+    points = vtk.vtkPoints()
+    sgrid = vtk.vtkStructuredGrid()
     data, Xs, Ys = readInFile('altitudes.txt')
     scalars = vtk.vtkFloatArray()
 
@@ -48,25 +48,21 @@ def initilizeData():
         for j in range(0, Ys):
             index = j + (i * Xs)
 
-            # TODO calcule courbre de la terre
-            #points.InsertNextPoint(i, j, data[index]*0.04)
-            points.InsertNextPoint(coordinate_earth(LAT_1 + i * delta_lat, LNG_1 + j * delta_long , data[index]))
+            #Calcul of latitude, longitude for each point
+            latitude = LAT_1 + i * delta_lat
+            longitude = LNG_1 + j * delta_long
+            altitude = data[index]
 
+            points.InsertNextPoint(coordinate_earth(latitude, longitude, altitude))
 
             # TODO calcule du scalar
-            scalars.InsertNextValue(data[index])
+            scalars.InsertNextValue(altitude)
 
     sgrid.SetPoints(points)
     sgrid.SetDimensions([Xs, Ys, 1])
     sgrid.GetPointData().SetScalars(scalars)
 
     # TODO ecrire les donnée dans un ficher ? comme pour le cube
-
-
-def main():
-
-    initilizeData()
-
 
     # TODO modifier le lut pour afficher les bonnes couleurs : Ici c'est de la merde se que j'ai fait
     lut = vtk.vtkLookupTable()
