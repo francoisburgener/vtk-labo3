@@ -62,8 +62,6 @@ def main():
     sgrid.SetDimensions([Xs, Ys, 1])
     sgrid.GetPointData().SetScalars(scalars)
 
-    # TODO ecrire les donnée dans un ficher ? comme pour le cube
-
     # TODO modifier le lut pour afficher les bonnes couleurs : Ici c'est de la merde se que j'ai fait
     lut = vtk.vtkLookupTable()
     lut.SetNumberOfColors(10)
