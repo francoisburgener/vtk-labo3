@@ -56,7 +56,7 @@ def main():
 
             points.InsertNextPoint(coordinate_earth(latitude, longitude, altitude))
 
-            # TODO calcule du scalar
+            # TODO modifier la valeur du scalar en fonction de si c'est un lac ou pas
             scalars.InsertNextValue(altitude)
 
     sgrid.SetPoints(points)
