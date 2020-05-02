@@ -1,8 +1,23 @@
 import vtk as vtk
 
-
+# CONSTANT
 points = vtk.vtkPoints()
 sgrid = vtk.vtkStructuredGrid()
+LAT_1 = 45.0
+LAT_2 = 47.5
+LNG_1 = 5.0
+LNG_2 = 7.5
+R_EARTH = 6371009
+
+def coordinate_earth(lat,lng,alt):
+    transform = vtk.vtkTransform()
+    transform.RotateY(lng)
+    transform.RotateX(lat)
+    transform.Translate(0, 0, R_EARTH + alt)
+
+    return transform.TransformPoint(0, 0, 0)
+
+
 
 def readInFile(filename):
     with open(filename, 'r', encoding="utf-8") as fd:
@@ -23,6 +38,9 @@ def initilizeData():
     data, Xs, Ys = readInFile('altitudes.txt')
     scalars = vtk.vtkFloatArray()
 
+    delta_long = (LNG_2 - LNG_1) / Xs
+    delta_lat = (LAT_2 - LAT_1) / Ys
+
 
     # TODO comment detecter les lac ?
 
@@ -31,7 +49,9 @@ def initilizeData():
             index = j + (i * Xs)
 
             # TODO calcule courbre de la terre
-            points.InsertNextPoint(i, j, data[index]*0.04)
+            #points.InsertNextPoint(i, j, data[index]*0.04)
+            points.InsertNextPoint(coordinate_earth(LAT_1 + i * delta_lat, LNG_1 + j * delta_long , data[index]))
+
 
             # TODO calcule du scalar
             scalars.InsertNextValue(data[index])
@@ -41,7 +61,7 @@ def initilizeData():
     sgrid.GetPointData().SetScalars(scalars)
 
     # TODO ecrire les donnée dans un ficher ? comme pour le cube
-    
+
 
 def main():
 
@@ -83,7 +103,7 @@ def main():
 
     renWin = vtk.vtkRenderWindow()
     renWin.AddRenderer(renderer)
-    renWin.SetSize(640, 640)
+    renWin.SetSize(640, 480)
 
     iren = vtk.vtkRenderWindowInteractor()
     iren.SetRenderWindow(renWin)
@@ -100,6 +120,8 @@ def main():
     writer.SetFileName("map.png")
     writer.SetInputConnection(w2if.GetOutputPort())
     writer.Write()
+
+    print("Finish")
 
     # Interact with the data.
     iren.Initialize()
