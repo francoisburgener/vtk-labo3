@@ -130,3 +130,5 @@ dmypy.json
 
 altitudes.txt
 .idea/
+
+*.vtk

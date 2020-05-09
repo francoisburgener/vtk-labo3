@@ -1,4 +1,5 @@
 import vtk as vtk
+import os.path
 
 # CONSTANT
 LAT_1 = 45.0
@@ -8,7 +9,25 @@ LNG_2 = 7.5
 R_EARTH = 6371009
 MAX_SCALAR = 2000
 
-SEA_LVL = 370 # You can change to 370 or 0
+SEA_LVL = 370  # You can change to 370 or 0
+FILENAME = 'lab3_data_{}.vtk'.format(SEA_LVL)
+
+
+def write_in_file(filename, data):
+    # Step 2: Sauvez le résultat au moyen d'un vtkPolyDataWriter.
+    writer = vtk.vtkDataSetWriter()
+    writer.SetFileName(filename)
+    writer.SetInputData(data)
+    writer.Write()
+
+
+def read_from_file(filename):
+    # Step 3: Lisez le fichier sauvé au moyen d'un vtkPolyDataReader
+    reader = vtk.vtkStructuredGridReader()
+    reader.SetFileName(filename)
+    reader.Update()
+    return reader
+
 
 def GetScalarValue(data,Xs,Ys, i, j):
 
@@ -25,7 +44,8 @@ def GetScalarValue(data,Xs,Ys, i, j):
     else:
         return altitude
 
-def coordinate_earth(lat,lng,alt):
+
+def coordinate_earth(lat, lng, alt):
     transform = vtk.vtkTransform()
     transform.RotateY(lng)
     transform.RotateX(lat)
@@ -47,22 +67,19 @@ def readInFile(filename):
         return data, int(dimensions[0]), int(dimensions[1])
 
 
-def main():
+def first_exec(sgrid):
     points = vtk.vtkPoints()
-    sgrid = vtk.vtkStructuredGrid()
+
     data, Xs, Ys = readInFile('altitudes.txt')
     scalars = vtk.vtkFloatArray()
 
     delta_long = (LNG_2 - LNG_1) / Xs
     delta_lat = (LAT_2 - LAT_1) / Ys
 
-    minScalar = float("inf")
-
     for i in range(0, Xs):
         for j in range(0, Ys):
-            index = j + (i * Xs)
 
-            #Calcul of latitude, longitude for each point
+            # Calcul of latitude, longitude for each point
             latitude = LAT_1 + i * delta_lat
             longitude = LNG_1 + j * delta_long
             altitude = data[i][j]
@@ -75,12 +92,25 @@ def main():
             # TODO modifier la valeur du scalar en fonction de si c'est un lac ou pas
             scalars.InsertNextValue(GetScalarValue(data, Xs, Ys, i, j))
 
-            if minScalar > altitude:
-                minScalar = altitude
 
     sgrid.SetPoints(points)
     sgrid.SetDimensions([Xs, Ys, 1])
     sgrid.GetPointData().SetScalars(scalars)
+
+
+def main():
+    sgrid = vtk.vtkStructuredGrid()
+    # Here we take an arbitrary value.
+    # We could eval the min altitude from the points but we'd have to serialize it as well
+    minScalar = 136
+
+    # If we exec the program for the first time, we have to run some calculations
+    # Otherwise we'll just read the file. So we have a sort of cache to speed up
+    if not os.path.isfile(FILENAME):
+        first_exec(sgrid)
+        write_in_file(FILENAME, sgrid)
+
+    reader = read_from_file(FILENAME)
 
     lut = vtk.vtkLookupTable()
     lut.SetHueRange(0.4, 0.0)
@@ -90,15 +120,15 @@ def main():
     lut.UseBelowRangeColorOn()
     lut.Build()
 
-
     # Filter pour récupérer les donnée du sgrid
-    gridFilter = vtk.vtkStructuredGridGeometryFilter()
-    gridFilter.SetInputData(sgrid)
-    gridFilter.Update()
+    # gridFilter = vtk.vtkStructuredGridGeometryFilter()
+    # gridFilter.SetInputData(sgrid)
+    # gridFilter.Update()
 
     # Mapper
     gridMapper = vtk.vtkDataSetMapper()
-    gridMapper.SetInputConnection(gridFilter.GetOutputPort())
+    # gridMapper.SetInputConnection(gridFilter.GetOutputPort())
+    gridMapper.SetInputData(reader.GetOutput())
     gridMapper.SetScalarRange(minScalar, MAX_SCALAR) # TODO quel range mettre ?
     gridMapper.SetLookupTable(lut)
 
