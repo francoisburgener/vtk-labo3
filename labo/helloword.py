@@ -8,9 +8,10 @@ LNG_1 = 5.0
 LNG_2 = 7.5
 R_EARTH = 6371009
 MAX_SCALAR = 2000
+MIN_SCALAR = 136
 
-SEA_LVL = 370  # You can change to 370 or 0
-FILENAME = 'lab3_data_{}.vtk'.format(SEA_LVL)
+SEA_ALT = 370  # You can change to 370 or 0
+FILENAME = 'lab3_data_{}.vtk'.format(SEA_ALT)
 
 
 def write_in_file(filename, data):
@@ -84,12 +85,11 @@ def first_exec(sgrid):
             longitude = LNG_1 + j * delta_long
             altitude = data[i][j]
 
-            if altitude < SEA_LVL:
+            if altitude < SEA_ALT:
                 data[i][j] = 0
 
             points.InsertNextPoint(coordinate_earth(latitude, longitude, altitude))
 
-            # TODO modifier la valeur du scalar en fonction de si c'est un lac ou pas
             scalars.InsertNextValue(GetScalarValue(data, Xs, Ys, i, j))
 
 
@@ -102,7 +102,7 @@ def main():
     sgrid = vtk.vtkStructuredGrid()
     # Here we take an arbitrary value.
     # We could eval the min altitude from the points but we'd have to serialize it as well
-    minScalar = 136
+
 
     # If we exec the program for the first time, we have to run some calculations
     # Otherwise we'll just read the file. So we have a sort of cache to speed up
@@ -120,16 +120,11 @@ def main():
     lut.UseBelowRangeColorOn()
     lut.Build()
 
-    # Filter pour récupérer les donnée du sgrid
-    # gridFilter = vtk.vtkStructuredGridGeometryFilter()
-    # gridFilter.SetInputData(sgrid)
-    # gridFilter.Update()
 
     # Mapper
     gridMapper = vtk.vtkDataSetMapper()
-    # gridMapper.SetInputConnection(gridFilter.GetOutputPort())
     gridMapper.SetInputData(reader.GetOutput())
-    gridMapper.SetScalarRange(minScalar, MAX_SCALAR) # TODO quel range mettre ?
+    gridMapper.SetScalarRange(MIN_SCALAR, MAX_SCALAR)
     gridMapper.SetLookupTable(lut)
 
     # Actor
@@ -148,8 +143,8 @@ def main():
     renWin.Render()
 
     # renderer.GetActiveCamera().SetClippingRange(1, 640 * 480)
-    # renderer.GetActiveCamera().SetFocalPoint(coordinate_earth((LAT_2 - LAT_1) / 2.0, (LNG_2 - LNG_1) / 2.0, minScalar))
-    # renderer.GetActiveCamera().SetPosition(coordinate_earth((LAT_2 - LAT_1) / 2.0, (LNG_2 - LNG_1) / 2.0, 50000))
+    # renderer.GetActiveCamera().SetFocalPoint(coordinate_earth((LAT_2 - LAT_1) / 2.0, (LNG_2 - LNG_1) / 2.0, MIN_SCALAR))
+    # renderer.GetActiveCamera().SetPosition(coordinate_earth((LAT_2 - LAT_1) / 2.0, (LNG_2 - LNG_1) / 2.0, 40000))
 
     iren = vtk.vtkRenderWindowInteractor()
     iren.SetRenderWindow(renWin)
@@ -162,14 +157,11 @@ def main():
     w2if.Update()
 
     writer = vtk.vtkPNGWriter()
-    writer.SetFileName("map{}.png".format(SEA_LVL))
+    writer.SetFileName("map_{}.png".format(SEA_ALT))
     writer.SetInputConnection(w2if.GetOutputPort())
     writer.Write()
 
     print("Finish")
-    print(renderer.GetActiveCamera().GetFocalPoint())
-    print(renderer.GetActiveCamera().GetPosition())
-    print(renderer.GetActiveCamera().GetDistance())
 
     # Interact with the data.
     iren.Initialize()
