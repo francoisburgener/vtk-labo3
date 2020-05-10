@@ -103,7 +103,6 @@ def main():
     # Here we take an arbitrary value.
     # We could eval the min altitude from the points but we'd have to serialize it as well
 
-
     # If we exec the program for the first time, we have to run some calculations
     # Otherwise we'll just read the file. So we have a sort of cache to speed up
     if not os.path.isfile(FILENAME):
@@ -136,15 +135,14 @@ def main():
     renderer.AddActor(gridActor)
     renderer.SetBackground(0.5, 0.5, 0.5)
 
-
     renWin = vtk.vtkRenderWindow()
     renWin.AddRenderer(renderer)
     renWin.SetSize(640, 480)
     renWin.Render()
 
-    # renderer.GetActiveCamera().SetClippingRange(1, 640 * 480)
-    # renderer.GetActiveCamera().SetFocalPoint(coordinate_earth((LAT_2 - LAT_1) / 2.0, (LNG_2 - LNG_1) / 2.0, MIN_SCALAR))
-    # renderer.GetActiveCamera().SetPosition(coordinate_earth((LAT_2 - LAT_1) / 2.0, (LNG_2 - LNG_1) / 2.0, 40000))
+    renderer.ResetCameraClippingRange()
+    renderer.GetActiveCamera().SetFocalPoint(coordinate_earth(480, 640/2.0, 50000))
+    # renderer.GetActiveCamera().SetPosition(coordinate_earth(480, 640, 50000))
 
     iren = vtk.vtkRenderWindowInteractor()
     iren.SetRenderWindow(renWin)
